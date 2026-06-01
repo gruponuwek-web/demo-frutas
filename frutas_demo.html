@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frutas · Demo Google Sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f4f6;
+    --card:#ffffff;
+    --ink:#1c1c22;
+    --muted:#71717a;
+    --line:#e7e7ec;
+    --accent:#4f46e5;
+    --accent-soft:#eef0ff;
+    --nueva:#16a34a; --nueva-bg:#e9f7ee;
+    --madura:#d97706; --madura-bg:#fdf2e3;
+    --viejita:#dc2626; --viejita-bg:#fbeaea;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    padding:32px 20px 80px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:840px;margin:0 auto}
+  header{margin-bottom:28px}
+  h1{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:15px;margin-top:4px}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:20px}
+  @media(min-width:720px){.grid{grid-template-columns:320px 1fr}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:18px}
+
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+  .field{margin-bottom:16px}
+  input,select{
+    width:100%;font-family:inherit;font-size:15px;color:var(--ink);
+    padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+  button{
+    width:100%;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;
+    background:var(--accent);color:#fff;border:none;border-radius:10px;
+    padding:12px;cursor:pointer;transition:transform .08s,opacity .15s;
+  }
+  button:hover{opacity:.92}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  .msg{font-size:13.5px;margin-top:12px;min-height:18px}
+  .msg.ok{color:var(--nueva)}
+  .msg.err{color:var(--viejita)}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;
+    text-transform:uppercase;letter-spacing:.05em;padding:0 10px 10px;border-bottom:1px solid var(--line)}
+  td{padding:13px 10px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+
+  .pill{display:inline-block;font-size:12.5px;font-weight:600;
+    padding:3px 11px;border-radius:999px;text-transform:capitalize}
+  .pill.nueva{color:var(--nueva);background:var(--nueva-bg)}
+  .pill.madura{color:var(--madura);background:var(--madura-bg)}
+  .pill.viejita{color:var(--viejita);background:var(--viejita-bg)}
+
+  .state{color:var(--muted);font-size:14px;padding:24px 6px;text-align:center}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .refresh{width:auto;background:transparent;color:var(--accent);padding:6px 10px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Inventario de frutas 🍎</h1>
+    <p class="sub">Demo de lectura y escritura en Google Sheets vía AppScript</p>
+  </header>
+
+  <div class="grid">
+    <!-- Formulario -->
+    <div class="card">
+      <h2>Registrar fruta</h2>
+      <div class="field">
+        <label for="fruta">Fruta</label>
+        <input id="fruta" type="text" placeholder="Ej. Mango" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="estado">Estado</label>
+        <select id="estado">
+          <option value="nueva">Nueva</option>
+          <option value="madura">Madura</option>
+          <option value="viejita">Viejita</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="persona">Ingresado por</label>
+        <select id="persona"><option>Cargando…</option></select>
+      </div>
+      <button id="btn" onclick="agregar()">Agregar fruta</button>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+      <div class="topbar">
+        <h2 style="margin:0">Frutas registradas</h2>
+        <button class="refresh" onclick="cargar()">↻ Actualizar</button>
+      </div>
+      <div id="tabla"><div class="state">Cargando datos…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbzOfw-ZXrwbqoc1bXaPbqPXlP_MG7SRbWsTkd5fAkVq8DeZJnaBzKZKVisZ3bPqlczR1Q/exec";
+
+function hoy(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
+async function cargar(){
+  const tabla = document.getElementById('tabla');
+  const persona = document.getElementById('persona');
+  tabla.innerHTML = '<div class="state">Cargando datos…</div>';
+  try{
+    const r = await fetch(API);
+    const data = await r.json();
+
+    // Llenar dropdown de personas
+    persona.innerHTML = data.personas
+      .map(p => `<option value="${p.Nombre}">${p.Nombre}</option>`).join('');
+
+    // Pintar tabla
+    if(!data.frutas.length){
+      tabla.innerHTML = '<div class="state">Aún no hay frutas registradas.</div>';
+      return;
+    }
+    const filas = data.frutas.map(f => `
+      <tr>
+        <td>${f.Fruta}</td>
+        <td><span class="pill ${f.Estado}">${f.Estado}</span></td>
+        <td>${f.Fecha_Ingreso}</td>
+        <td>${f.Ingresado_Por}</td>
+      </tr>`).join('');
+    tabla.innerHTML = `
+      <table>
+        <thead><tr><th>Fruta</th><th>Estado</th><th>Ingreso</th><th>Por</th></tr></thead>
+        <tbody>${filas}</tbody>
+      </table>`;
+  }catch(e){
+    tabla.innerHTML = '<div class="state">⚠️ No se pudo leer la hoja. Revisa la URL del Web App.</div>';
+    console.error(e);
+  }
+}
+
+async function agregar(){
+  const fruta   = document.getElementById('fruta').value.trim();
+  const estado  = document.getElementById('estado').value;
+  const persona = document.getElementById('persona').value;
+  const btn = document.getElementById('btn');
+  const msg = document.getElementById('msg');
+
+  if(!fruta){ msg.className='msg err'; msg.textContent='Escribe el nombre de la fruta.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  msg.className='msg'; msg.textContent='';
+
+  try{
+    // Sin header Content-Type: el body string viaja como text/plain y evita el preflight de CORS
+    const r = await fetch(API, {
+      method:'POST',
+      body: JSON.stringify({ fruta, estado, fecha: hoy(), ingresado_por: persona })
+    });
+    const res = await r.json();
+    if(res.ok){
+      msg.className='msg ok'; msg.textContent = `✓ "${fruta}" agregada.`;
+      document.getElementById('fruta').value='';
+      await cargar();
+    }else{
+      throw new Error(res.error || 'respuesta no ok');
+    }
+  }catch(e){
+    msg.className='msg err'; msg.textContent='⚠️ No se pudo guardar. Revisa la consola.';
+    console.error(e);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Agregar fruta';
+  }
+}
+
+cargar();
+</script>
+</body>
+</html>
